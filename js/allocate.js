@@ -84,6 +84,23 @@ export function allocate({ counts, forming, frente, fondo }) {
     }
   }
 
+  // Como fillFromPool, pero respetando la preferencia del puesto: se agota
+  // cada empleo (en el orden dado) en todos los donantes antes de pasar al
+  // siguiente. Para jefes de sección: todos los Tte disponibles antes que
+  // ningún Bda, y estos antes que ningún Sgto 1º.
+  function fillFromPoolByPreference(toUnit, out, slots, eligible) {
+    for (const rank of eligible) {
+      for (const donor of COMPANY_ORDER) {
+        if (donor === toUnit) continue;
+        while (out.length < slots && avail[donor][rank] > 0) {
+          avail[donor][rank]--;
+          recordTransfer(donor, toUnit, rank);
+          out.push({ rank, origin: donor });
+        }
+      }
+    }
+  }
+
   // ── Plana: cubrir con gente propia ─────────────────────────────────────
   const plana = { unit: 'PLANA', mando: null, oficiales: [], suboficiales: [], warnings: [] };
   plana.mando = takeOwn('PLANA', 'TCOL') || takeOwn('PLANA', 'CTE');
@@ -123,7 +140,20 @@ export function allocate({ counts, forming, frente, fondo }) {
 
   // Después, las compañías por orden de recepción.
   for (const c of companies) {
-    fillFromPool(c.unit, c.jsec, 3, ['TTE', 'BDA', 'SGTO1']);
+    // Jefes de sección: siempre que haya tenientes, son ellos. Un Sgto 1º
+    // propio solo se queda de JSec si no quedan tenientes en ninguna parte;
+    // si llega un Tte agregado, el Sgto 1º baja (a JPn propio si hay hueco).
+    while (true) {
+      const i = c.jsec.findIndex((p) => p.rank === 'SGTO1');
+      if (i < 0) break;
+      const tte = takePool(c.unit, ['TTE']);
+      if (!tte) break;
+      const out = c.jsec.splice(i, 1, tte)[0];
+      avail[out.origin][out.rank]++;
+    }
+    fillFromPoolByPreference(c.unit, c.jsec, 3, ['TTE', 'BDA', 'SGTO1']);
+    // Recolocar en JPn al Sgto 1º propio que haya podido quedar liberado.
+    fillOwn(c.unit, c.jpn, frente, ['SGTO1', 'SGTO', 'CABO1']);
     fillFromPool(c.unit, c.jpn, frente, ['SGTO1', 'SGTO', 'CABO1']);
     fillFromPool(c.unit, c.cabos, frente, ['CABO']);
     fillFromPool(c.unit, c.regs, regsSlots, ['REG']);

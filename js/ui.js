@@ -349,8 +349,20 @@ $('#btn-edit').addEventListener('click', () => {
   $('#wizard').classList.remove('hidden');
   window.scrollTo({ top: 0 });
 });
-$('#btn-png').addEventListener('click', () => downloadPNG($('#diagram'), 'encuadre.png'));
-$('#btn-print').addEventListener('click', () => window.print());
+// "Formacion 23-10-2026": nombre del PDF al imprimir y del PNG descargado.
+function fileStamp() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()}`;
+}
+$('#btn-png').addEventListener('click', () =>
+  downloadPNG($('#diagram'), `Formacion ${fileStamp()}.png`));
+$('#btn-print').addEventListener('click', () => {
+  const prev = document.title;
+  document.title = `Formacion ${fileStamp()}`;
+  window.print();
+  document.title = prev;
+});
 $('#btn-reset').addEventListener('click', () => {
   if (!confirm('¿Borrar todos los números metidos?')) return;
   state = { counts: {}, forming: [], frente: 9, fondo: 8 };

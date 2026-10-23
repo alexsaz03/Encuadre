@@ -74,6 +74,29 @@ test('orden de donantes 1-2-3-4-MAPO-SVS', () => {
   assert.deepEqual(r.leftovers.SVS, { REG: 8 });
 });
 
+test('los jefes de sección son tenientes siempre que los haya', () => {
+  // La 1ª cubre sus JSec con 1 Tte, 1 Bda y 1 Sgto 1º propios, pero MAPO
+  // (no forma) tiene un Tte: el Sgto 1º le cede el puesto y baja a JPn.
+  const input = base({ 1: { ...CIA_EXACTA, TTE: 1, BDA: 1, SGTO1: 2, SGTO: 7 } });
+  input.counts.MAPO = { TTE: 1 };
+  const r = allocate(input);
+  const c = r.companies[0];
+  assert.deepEqual(c.jsec.map((p) => p.rank).sort(), ['BDA', 'TTE', 'TTE']);
+  assert.ok(c.jsec.some((p) => p.rank === 'TTE' && p.origin === 'MAPO'));
+  assert.ok(!c.jsec.some((p) => p.rank === 'SGTO1'));
+  assert.equal(c.jpn.filter((p) => p.rank === 'SGTO1').length, 2); // el liberado vuelve a JPn
+});
+
+test('para JSec se prefiere un Bda agregado antes que un Sgto 1º agregado', () => {
+  const input = base({ 1: { ...CIA_EXACTA, TTE: 1, SGTO1: 0, SGTO: 9 } }); // faltan 2 JSec
+  input.counts['2'] = { SGTO1: 2 }; // donante anterior en el orden, pero más moderno
+  input.counts.MAPO = { BDA: 2 };
+  const r = allocate(input);
+  const c = r.companies[0];
+  assert.deepEqual(c.jsec.map((p) => p.rank).sort(), ['BDA', 'BDA', 'TTE']);
+  assert.ok(c.jsec.every((p) => p.rank !== 'SGTO1'));
+});
+
 test('sin capitán propio: sube el teniente; nunca se agrega un capitán', () => {
   const input = base({ 1: { ...CIA_EXACTA, CAP: 0, TTE: 4 } });
   input.counts.MAPO = { CAP: 3 }; // capitanes disponibles fuera, pero no valen para mandar
