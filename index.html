@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Encuadre</title>
+  <meta name="description" content="Cuadrante de formaciones: reparte la gente por empleos entre las compañías que forman y dibuja la formación.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='%233e5e3a'/%3E%3Ctext x='16' y='21' font-size='14' font-weight='bold' text-anchor='middle' fill='white' font-family='sans-serif'%3EE%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header>
+    <h1>Encuadre</h1>
+    <p class="subtitle">Cuadrante de formaciones por compañías y empleos</p>
+  </header>
+
+  <main>
+    <!-- Wizard -->
+    <div id="wizard">
+      <nav id="steps-nav" aria-label="Pasos">
+        <button class="step-dot" data-step="0"><span class="num">1</span> Números</button>
+        <button class="step-dot" data-step="1"><span class="num">2</span> Quién forma</button>
+        <button class="step-dot" data-step="2"><span class="num">3</span> Tamaño</button>
+      </nav>
+
+      <section class="step" data-step="0">
+        <h2>Números por unidad</h2>
+        <p class="hint">Mete la gente disponible de cada unidad por empleo. El banderín y el guion
+          con su acompañante van <strong>aparte</strong>: no los cuentes aquí.</p>
+        <div id="units-grid"></div>
+      </section>
+
+      <section class="step hidden" data-step="1">
+        <h2>¿Qué compañías forman?</h2>
+        <p class="hint">Solo puedes marcar unidades con números metidos. La Plana forma siempre.</p>
+        <div id="forming-list"></div>
+      </section>
+
+      <section class="step hidden" data-step="2">
+        <h2>¿De cuánto se forma?</h2>
+        <p class="hint">Frente × fondo de la caja de cada compañía. El fondo incluye la fila de
+          jefes de pelotón y la de cabos (9×8 = caja de 72).</p>
+        <div class="size-picker">
+          <label>
+            <span>Frente</span>
+            <input id="frente" type="number" inputmode="numeric" min="1" max="30" value="9">
+          </label>
+          <span class="times">×</span>
+          <label>
+            <span>Fondo</span>
+            <input id="fondo" type="number" inputmode="numeric" min="2" max="30" value="8">
+          </label>
+        </div>
+        <p id="size-summary" class="hint"></p>
+      </section>
+
+      <div class="nav-buttons">
+        <button id="btn-back" class="ghost">← Atrás</button>
+        <button id="btn-next" class="primary">Siguiente →</button>
+        <button id="btn-go" class="primary hidden">⚑ Encuadrar</button>
+      </div>
+      <p class="hint reset-row"><button id="btn-reset" class="link">Borrar todos los datos</button></p>
+    </div>
+
+    <!-- Resultados -->
+    <section id="results" class="hidden">
+      <div class="results-actions no-print">
+        <button id="btn-edit" class="ghost">← Editar datos</button>
+        <button id="btn-png" class="primary">Descargar dibujo (PNG)</button>
+        <button id="btn-print" class="ghost">Imprimir</button>
+      </div>
+
+      <div id="global-warnings"></div>
+
+      <h2>Compañías que forman</h2>
+      <div id="forming-results" class="cards"></div>
+
+      <h2>Agregados: quién da a quién</h2>
+      <div id="transfers-results"></div>
+
+      <h2>Se quedan sin formar</h2>
+      <div id="leftovers-results"></div>
+
+      <h2>Dibujo de la formación</h2>
+      <div id="legend"></div>
+      <div id="diagram-wrap">
+        <svg id="diagram" role="img" aria-label="Dibujo de la formación"></svg>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Los datos se guardan solo en este navegador.</p>
+  </footer>
+
+  <script type="module" src="js/ui.js"></script>
+</body>
+</html>

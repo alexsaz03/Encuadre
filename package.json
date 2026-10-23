@@ -1,0 +1,10 @@
+{
+  "name": "encuadre",
+  "version": "1.0.0",
+  "description": "Cuadrante de formaciones por compañías y empleos",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/allocate.test.js",
+    "start": "python3 -m http.server 8000"
+  }
+}
