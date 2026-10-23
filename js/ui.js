@@ -292,6 +292,77 @@ function renderLegend() {
      <span class="item"><span class="hole"></span>hueco sin cubrir</span>`;
 }
 
+// ── Hoja de impresión: dibujo arriba y resumen compacto por unidad ────────
+
+function psCard(unitId, badge, rows) {
+  const u = UNIT_BY_ID[unitId];
+  return `<div class="ps-card">
+    <h4><span class="dot" style="background:${u.color}"></span>${u.name}
+      <span class="muted">${badge}</span></h4>
+    ${rows.map(([k, v]) => `<div class="ps-row"><b>${k}:</b> ${v}</div>`).join('')}
+  </div>`;
+}
+
+function buildPrintSheet(result) {
+  const givesByUnit = {};
+  for (const t of result.transfers) (givesByUnit[t.from] = givesByUnit[t.from] || []).push(t);
+  const fmtGives = (u) => (givesByUnit[u] || [])
+    .sort((a, b) => RANK_INDEX[a.rank] - RANK_INDEX[b.rank])
+    .map((t) => `${t.count} ${RANK_BY_ID[t.rank].short} → ${SHORT_NAME[t.to]}`)
+    .join(' · ');
+  const fmtLeft = (u) => Object.entries(result.leftovers[u] || {})
+    .sort((a, b) => RANK_INDEX[a[0]] - RANK_INDEX[b[0]])
+    .map(([r, n]) => `${n} ${RANK_BY_ID[r].short}`)
+    .join(' · ');
+  const extraRows = (u) => {
+    const rows = [];
+    if (givesByUnit[u]) rows.push(['Da', fmtGives(u)]);
+    if (result.leftovers[u]) rows.push(['Sin formar', fmtLeft(u)]);
+    return rows;
+  };
+
+  const cards = [];
+  const p = result.plana;
+  const pTotal = [p.mando, ...p.oficiales, ...p.suboficiales].filter(Boolean).length;
+  cards.push(psCard('PLANA', `${pTotal} formando`, [
+    ['Mando', p.mando ? fmtPeople([p.mando], 'PLANA') : 'vacante'],
+    ['Oficiales', fmtPeople(p.oficiales, 'PLANA')],
+    ['Subof.', fmtPeople(p.suboficiales, 'PLANA')],
+    ...extraRows('PLANA'),
+  ]));
+  for (const c of result.companies) {
+    const all = [c.mando, ...c.jsec, ...c.jpn, ...c.cabos, ...c.regs].filter(Boolean);
+    const agg = all.filter((x) => x.origin !== c.unit).length;
+    cards.push(psCard(c.unit, `${all.length} formando${agg ? ` · ${agg} agr.` : ''}`, [
+      ['Mando', c.mando ? fmtPeople([c.mando], c.unit) : 'vacante'],
+      ['JSec', fmtPeople(c.jsec, c.unit)],
+      ['JPn', fmtPeople(c.jpn, c.unit)],
+      ['Cabos', fmtPeople(c.cabos, c.unit)],
+      ['Reg', fmtPeople(c.regs, c.unit)],
+      ...extraRows(c.unit),
+    ]));
+  }
+  for (const u of COMPANY_ORDER) {
+    if (result.companies.some((c) => c.unit === u)) continue;
+    const rows = extraRows(u);
+    if (rows.length) cards.push(psCard(u, 'no forma', rows));
+  }
+
+  const sheet = $('#print-sheet');
+  sheet.innerHTML = `
+    <div class="ps-head">
+      <span>FORMACIÓN ${result.frente}×${result.fondo}</span>
+      <span class="date">${fileStamp()}</span>
+    </div>
+    <div class="ps-diagram"></div>
+    <div class="ps-grid">${cards.join('')}</div>`;
+  const svgClone = $('#diagram').cloneNode(true);
+  svgClone.removeAttribute('id');
+  svgClone.removeAttribute('width');
+  svgClone.removeAttribute('height');
+  sheet.querySelector('.ps-diagram').appendChild(svgClone);
+}
+
 function runAllocation() {
   if (!state.forming.length) {
     alert('Marca al menos una compañía que forme (paso 2).');
@@ -323,6 +394,7 @@ function runAllocation() {
   renderLeftovers(result);
   renderLegend();
   renderDiagram($('#diagram'), result);
+  buildPrintSheet(result);
 
   $('#wizard').classList.add('hidden');
   $('#results').classList.remove('hidden');
@@ -358,6 +430,8 @@ function fileStamp() {
 $('#btn-png').addEventListener('click', () =>
   downloadPNG($('#diagram'), `Formacion ${fileStamp()}.png`));
 $('#btn-print').addEventListener('click', () => {
+  const dateEl = document.querySelector('#print-sheet .date');
+  if (dateEl) dateEl.textContent = fileStamp();
   const prev = document.title;
   document.title = `Formacion ${fileStamp()}`;
   window.print();

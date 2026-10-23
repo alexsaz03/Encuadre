@@ -304,11 +304,62 @@ footer {
   .nav-buttons button { flex: 1; }
 }
 
-/* ── Impresión ───────────────────────────────────────── */
+/* ── Impresión: una hoja apaisada con dibujo + resumen ── */
+.print-only { display: none; }
+
 @media print {
-  header, footer, #wizard, .no-print { display: none !important; }
+  @page { size: A4 landscape; margin: 8mm; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  header, footer, #wizard, #results, .no-print { display: none !important; }
   body { background: #fff; }
-  #results { display: block !important; }
-  #diagram-wrap { border: none; overflow: visible; }
-  #diagram { max-width: 100%; height: auto; }
+
+  #print-sheet {
+    display: block !important;
+    max-height: 191mm;
+    overflow: hidden;
+  }
+  .ps-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 12pt;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: #2d4529;
+    border-bottom: 1.5px solid #2d4529;
+    padding-bottom: 1.5mm;
+    margin-bottom: 2mm;
+  }
+  .ps-head .date { font-size: 10pt; letter-spacing: 1px; }
+  .ps-diagram {
+    width: 100%;
+    height: 94mm;
+  }
+  .ps-diagram svg { width: 100%; height: 100%; }
+  .ps-grid {
+    margin-top: 2.5mm;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2mm;
+  }
+  .ps-card {
+    border: 0.5pt solid #9aa89b;
+    border-radius: 1.5mm;
+    padding: 1.5mm 2mm;
+    font-size: 7pt;
+    line-height: 1.4;
+    break-inside: avoid;
+  }
+  .ps-card h4 {
+    margin: 0 0 0.8mm;
+    font-size: 8.5pt;
+    display: flex;
+    align-items: center;
+    gap: 1.5mm;
+  }
+  .ps-card h4 .muted { margin-left: auto; font-weight: 400; }
+  .ps-card .dot { width: 2.8mm; height: 2.8mm; }
+  .ps-card .muted { color: #555; font-size: 7pt; }
+  .ps-row b { color: #2d4529; }
+  .ps-card .agg { color: #0d47a1; }
 }
