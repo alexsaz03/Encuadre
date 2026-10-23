@@ -217,6 +217,7 @@ button.link {
   flex-wrap: wrap;
   margin: 14px 0;
 }
+.finish-row { justify-content: center; margin: 26px 0 10px; }
 .cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));

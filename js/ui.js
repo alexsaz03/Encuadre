@@ -437,14 +437,21 @@ $('#btn-print').addEventListener('click', () => {
   window.print();
   document.title = prev;
 });
-$('#btn-reset').addEventListener('click', () => {
-  if (!confirm('¿Borrar todos los números metidos?')) return;
+function resetAll() {
   state = { counts: {}, forming: [], frente: 9, fondo: 8 };
   saveState();
   buildUnitCards();
   $('#frente').value = 9;
   $('#fondo').value = 8;
+  $('#results').classList.add('hidden');
+  $('#wizard').classList.remove('hidden');
   showStep(0);
+}
+$('#btn-reset').addEventListener('click', () => {
+  if (confirm('¿Borrar todos los números metidos?')) resetAll();
+});
+$('#btn-finish').addEventListener('click', () => {
+  if (confirm('¿Finalizar? Se borrarán todos los datos metidos.')) resetAll();
 });
 
 showStep(0);
